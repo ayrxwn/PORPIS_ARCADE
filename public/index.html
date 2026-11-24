@@ -1,0 +1,935 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PORPIS ARCADE - Snake Battle</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #101522;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 850px;
+    text-align: center;
+}
+
+.logo {
+    font-family: 'Press Start 2P', cursive;
+    color: #79f28b;
+    font-size: clamp(20px, 5vw, 36px);
+    line-height: 1.7;
+    text-shadow: 4px 4px #236b45;
+}
+
+.subtitle {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    color: #ffcc55;
+    margin: 18px 0 35px;
+}
+
+.panel {
+    background: #202a3c;
+    border: 4px solid #53647f;
+    box-shadow: 7px 7px #090d16;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 13px;
+    color: #79f28b;
+    line-height: 1.8;
+}
+
+input, select {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: 3px solid #53647f;
+    background: #111827;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 12px;
+    border: none;
+    background: #79f28b;
+    color: #101522;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    cursor: pointer;
+    box-shadow: 0 5px #328b50;
+}
+
+button:hover { filter: brightness(1.12); }
+
+button:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px #328b50;
+}
+
+button.secondary {
+    background: #ffcc55;
+    box-shadow: 0 5px #a97823;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.hidden { display: none !important; }
+
+.player {
+    background: #111827;
+    border: 2px solid #53647f;
+    padding: 13px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+}
+
+.dot {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.room-code {
+    font-family: 'Press Start 2P', cursive;
+    color: #ffcc55;
+    font-size: 24px;
+    margin: 20px 0;
+    letter-spacing: 4px;
+}
+
+#message {
+    color: #ffcc55;
+    font-weight: 900;
+    margin-top: 15px;
+    min-height: 24px;
+}
+
+.footer {
+    color: #75849b;
+    font-size: 12px;
+    margin-top: 25px;
+}
+
+.speed-box {
+    background: #111827;
+    border: 2px solid #53647f;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.speed-box label {
+    color: #ffcc55;
+    font-weight: 900;
+}
+
+.speed-box p {
+    color: #a9b7cb;
+    font-size: 13px;
+}
+
+#game { width: 100%; }
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.game-header h2 { margin: 0; }
+
+#gameStatus {
+    color: #ffcc55;
+    font-weight: 900;
+}
+
+.arena {
+    position: relative;
+    width: 100%;
+    background: #0b1120;
+    border: 5px solid #53647f;
+    box-shadow: 7px 7px #090d16;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+}
+
+#gameOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 10, 20, 0.88);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#overlayTitle {
+    font-family: 'Press Start 2P', cursive;
+    color: #79f28b;
+    font-size: clamp(15px, 4vw, 25px);
+    line-height: 1.8;
+}
+
+#overlayText {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+#returnButton {
+    max-width: 350px;
+}
+
+.scoreboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.score-item {
+    background: #202a3c;
+    border: 2px solid #53647f;
+    padding: 12px;
+    font-weight: 900;
+}
+
+.score-item small {
+    display: block;
+    color: #a9b7cb;
+    margin-top: 5px;
+}
+
+.dead {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.controls {
+    max-width: 230px;
+    margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.controls button {
+    margin: 0;
+    padding: 17px 5px;
+    font-size: 17px;
+    font-family: Arial, sans-serif;
+    touch-action: manipulation;
+}
+
+.controls .empty { visibility: hidden; }
+
+.help {
+    color: #a9b7cb;
+    font-size: 13px;
+}
+
+@media (max-width: 500px) {
+    .panel { padding: 15px; }
+    .room-code { font-size: 19px; }
+    .game-header h2 { font-size: 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">PORPIS<br>ARCADE</div>
+    <div class="subtitle">SNAKE BATTLE</div>
+
+    <!-- MAIN MENU -->
+
+    <div id="menu" class="panel">
+        <h2>PLAYER SETUP</h2>
+
+        <input id="playerName" maxlength="16"
+               placeholder="ENTER YOUR NAME">
+
+        <button onclick="createRoom()">CREATE ROOM</button>
+
+        <hr style="border-color:#53647f;margin:25px 0">
+
+        <h2>JOIN A GAME</h2>
+
+        <input id="roomInput" maxlength="5"
+               placeholder="ENTER ROOM CODE">
+
+        <button class="secondary" onclick="joinRoom()">JOIN ROOM</button>
+    </div>
+
+    <!-- LOBBY -->
+
+    <div id="lobby" class="panel hidden">
+
+        <h2>GAME LOBBY</h2>
+
+        <p>ROOM CODE</p>
+        <div id="roomCode" class="room-code"></div>
+
+        <button class="secondary" onclick="copyCode()">COPY ROOM CODE</button>
+
+        <h2 style="margin-top:30px">PLAYERS</h2>
+
+        <div id="playerList"></div>
+
+        <p id="playerCount">0 / 4 PLAYERS</p>
+
+        <!-- SPEED SETTINGS -->
+
+        <div id="speedBox" class="speed-box hidden">
+
+            <label for="speedSelect">GAME SPEED</label>
+
+            <select id="speedSelect" onchange="changeSpeed()">
+                <option value="slow">SLOW</option>
+                <option value="normal" selected>NORMAL</option>
+                <option value="fast">FAST</option>
+            </select>
+
+            <p id="speedDescription">
+                Slow: 300ms per movement
+            </p>
+
+        </div>
+
+        <p id="hostMessage" class="help"></p>
+
+        <button id="startButton" onclick="startGame()" class="hidden">
+            START GAME
+        </button>
+
+        <button onclick="leaveRoom()" class="secondary">
+            LEAVE ROOM
+        </button>
+
+    </div>
+
+    <!-- GAME SCREEN -->
+
+    <div id="game" class="hidden">
+
+        <div class="game-header">
+            <h2>SNAKE BATTLE</h2>
+            <span id="gameStatus">GET READY!</span>
+        </div>
+
+        <div class="arena">
+
+            <canvas id="gameCanvas"
+                    width="900" height="600"></canvas>
+
+            <div id="gameOverlay" class="hidden">
+
+                <div id="overlayTitle">GAME OVER</div>
+
+                <p id="overlayText"></p>
+
+                <button id="returnButton"
+                        class="hidden"
+                        onclick="returnToLobby()">
+                    RETURN TO LOBBY
+                </button>
+
+            </div>
+
+        </div>
+
+        <div id="scoreboard" class="scoreboard"></div>
+
+        <p class="help" id="controlHelp">
+            USE ARROW KEYS OR WASD TO MOVE
+        </p>
+
+        <!-- MOBILE CONTROLS -->
+
+        <div id="mobileControls" class="controls">
+
+            <div class="empty"></div>
+            <button onclick="sendDirection('up')">▲</button>
+            <div class="empty"></div>
+
+            <button onclick="sendDirection('left')">◀</button>
+            <button onclick="sendDirection('down')">▼</button>
+            <button onclick="sendDirection('right')">▶</button>
+
+        </div>
+
+        <button class="secondary" onclick="leaveRoom()">
+            LEAVE GAME
+        </button>
+
+    </div>
+
+    <div id="message"></div>
+
+    <div class="footer">
+        PORPIS ARCADE © 2026<br>
+        DIDTO SA PORPIS REKLAMO DOL!
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+
+let currentRoom = "";
+let latestGameState = null;
+let isSpectator = false;
+let gameFinished = false;
+let isHost = false;
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const CELL = 30;
+
+const SPEED_TEXT = {
+    slow: "Slow: 300ms per movement",
+    normal: "Normal: 200ms per movement",
+    fast: "Fast: 120ms per movement"
+};
+
+function showMessage(message) {
+    document.getElementById("message").textContent = message;
+}
+
+function getName() {
+    return document.getElementById("playerName").value.trim();
+}
+
+// CREATE ROOM
+
+function createRoom() {
+    const name = getName();
+
+    if (!name) {
+        showMessage("ENTER YOUR PLAYER NAME FIRST!");
+        return;
+    }
+
+    socket.emit("createRoom", name, handleRoomResponse);
+}
+
+// JOIN ROOM
+
+function joinRoom() {
+    const name = getName();
+
+    const code = document.getElementById("roomInput")
+        .value.trim().toUpperCase();
+
+    if (!name || !code) {
+        showMessage("ENTER YOUR NAME AND ROOM CODE!");
+        return;
+    }
+
+    socket.emit("joinRoom", {
+        roomCode: code,
+        playerName: name
+    }, handleRoomResponse);
+}
+
+// ROOM RESPONSE
+
+function handleRoomResponse(response) {
+    if (!response.success) {
+        showMessage(response.message);
+        return;
+    }
+
+    currentRoom = response.roomCode;
+
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("lobby").classList.remove("hidden");
+
+    document.getElementById("roomCode").textContent = currentRoom;
+
+    updatePlayers(response.players);
+    updateSpeed(response.speed || "normal");
+
+    showMessage("WELCOME TO THE LOBBY!");
+}
+
+// PLAYER LIST
+
+socket.on("roomUpdate", updatePlayers);
+
+function updatePlayers(players) {
+
+    const list = document.getElementById("playerList");
+    list.innerHTML = "";
+
+    players.forEach(player => {
+
+        const item = document.createElement("div");
+        item.className = "player";
+
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        dot.style.backgroundColor = player.color;
+
+        const name = document.createElement("strong");
+        name.textContent = player.name;
+
+        item.appendChild(dot);
+        item.appendChild(name);
+
+        list.appendChild(item);
+    });
+
+    document.getElementById("playerCount").textContent =
+        players.length + " / 4 PLAYERS";
+
+    isHost = players.length > 0 &&
+        players[0].id === socket.id;
+
+    const startButton = document.getElementById("startButton");
+    const speedBox = document.getElementById("speedBox");
+
+    startButton.classList.toggle("hidden", !isHost);
+    speedBox.classList.toggle("hidden", !isHost);
+
+    if (isHost) {
+
+        startButton.disabled = players.length < 2;
+
+        document.getElementById("hostMessage").textContent =
+            players.length < 2
+                ? "WAITING FOR AT LEAST ONE MORE PLAYER..."
+                : "YOU ARE THE HOST. READY TO PLAY!";
+
+    } else {
+
+        document.getElementById("hostMessage").textContent =
+            "WAITING FOR THE HOST TO START...";
+
+    }
+}
+
+// SPEED SELECTION
+
+function changeSpeed() {
+
+    const speed = document.getElementById("speedSelect").value;
+
+    socket.emit("setGameSpeed", speed, response => {
+
+        if (!response.success) {
+            showMessage(response.message);
+            return;
+        }
+
+        showMessage("GAME SPEED UPDATED!");
+    });
+}
+
+socket.on("speedUpdate", updateSpeed);
+
+function updateSpeed(speed) {
+
+    const selector = document.getElementById("speedSelect");
+
+    selector.value = speed;
+
+    document.getElementById("speedDescription").textContent =
+        SPEED_TEXT[speed] || SPEED_TEXT.normal;
+}
+
+// START GAME
+
+function startGame() {
+
+    socket.emit("startGame", response => {
+
+        if (!response.success) {
+            showMessage(response.message);
+        }
+
+    });
+}
+
+// RECEIVE GAME STATE
+
+socket.on("gameState", state => {
+
+    latestGameState = state;
+
+    document.getElementById("lobby").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+
+    const me = state.players.find(p => p.id === socket.id);
+
+    isSpectator = !me || !me.alive;
+    gameFinished = state.gameOver;
+
+    drawGame(state);
+    updateScoreboard(state);
+    updateGameStatus(state);
+
+    const controls = document.getElementById("mobileControls");
+
+    controls.classList.toggle(
+        "hidden",
+        isSpectator || gameFinished
+    );
+
+    const overlay = document.getElementById("gameOverlay");
+    const returnButton = document.getElementById("returnButton");
+
+    if (state.gameOver) {
+
+        overlay.classList.remove("hidden");
+
+        document.getElementById("overlayTitle").textContent =
+            state.winner ? "WINNER!" : "DRAW!";
+
+        document.getElementById("overlayText").textContent =
+            state.winner
+                ? state.winner.name + " WINS THE BATTLE!"
+                : "EVERYONE WAS ELIMINATED!";
+
+        returnButton.classList.toggle("hidden", !isHost);
+
+        if (!isHost) {
+            document.getElementById("overlayText").textContent +=
+                " WAITING FOR HOST TO RETURN TO LOBBY.";
+        }
+
+        document.getElementById("controlHelp").textContent =
+            "MATCH FINISHED!";
+
+    } else if (isSpectator) {
+
+        overlay.classList.remove("hidden");
+
+        document.getElementById("overlayTitle").textContent =
+            "ELIMINATED!";
+
+        document.getElementById("overlayText").textContent =
+            "YOU ARE NOW A SPECTATOR!";
+
+        returnButton.classList.add("hidden");
+
+        document.getElementById("controlHelp").textContent =
+            "WATCH THE REMAINING PLAYERS!";
+
+    } else {
+
+        overlay.classList.add("hidden");
+        returnButton.classList.add("hidden");
+
+        document.getElementById("controlHelp").textContent =
+            "USE ARROW KEYS OR WASD TO MOVE";
+
+    }
+
+});
+
+// RETURN TO SAME LOBBY
+
+function returnToLobby() {
+
+    socket.emit("returnToLobby", response => {
+
+        if (!response.success) {
+            showMessage(response.message);
+        }
+
+    });
+
+}
+
+socket.on("returnToLobby", () => {
+
+    latestGameState = null;
+    isSpectator = false;
+    gameFinished = false;
+
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("lobby").classList.remove("hidden");
+
+    document.getElementById("gameOverlay").classList.add("hidden");
+
+    showMessage("WELCOME BACK! READY FOR ANOTHER ROUND?");
+
+});
+
+// DRAW ARENA
+
+function drawGame(state) {
+
+    const width = state.width;
+    const height = state.height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#0b1120";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // GRID
+    ctx.strokeStyle = "#1d2b40";
+    ctx.lineWidth = 1;
+
+    for (let x = 0; x <= width; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x * CELL, 0);
+        ctx.lineTo(x * CELL, canvas.height);
+        ctx.stroke();
+    }
+
+    for (let y = 0; y <= height; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * CELL);
+        ctx.lineTo(canvas.width, y * CELL);
+        ctx.stroke();
+    }
+
+    // MULTIPLE FOOD ITEMS
+    const foods = state.foods || (state.food ? [state.food] : []);
+
+    foods.forEach(food => {
+        ctx.fillStyle = "#ffcc55";
+
+        ctx.fillRect(
+            food.x * CELL + 5,
+            food.y * CELL + 5,
+            CELL - 10,
+            CELL - 10
+        );
+
+        ctx.fillStyle = "#fff2ad";
+
+        ctx.fillRect(
+            food.x * CELL + 10,
+            food.y * CELL + 10,
+            6, 6
+        );
+    });
+
+    // SMALL SQUARE OBSTACLES
+    const obstacles = state.obstacles || [];
+
+    obstacles.forEach(obstacle => {
+        const x = obstacle.x * CELL;
+        const y = obstacle.y * CELL;
+
+        ctx.fillStyle = "#424b5b";
+        ctx.fillRect(x + 2, y + 2, CELL - 4, CELL - 4);
+
+        ctx.fillStyle = "#8994a5";
+        ctx.fillRect(x + 5, y + 5, CELL - 10, CELL - 10);
+
+        ctx.fillStyle = "#c2cad5";
+        ctx.fillRect(x + 7, y + 7, 7, 7);
+    });
+
+    // SNAKES
+    state.players.forEach(player => {
+
+        if (!player.alive) return;
+
+        player.snake.forEach((segment, index) => {
+
+            ctx.fillStyle = player.color;
+
+            ctx.fillRect(
+                segment.x * CELL + 2,
+                segment.y * CELL + 2,
+                CELL - 4,
+                CELL - 4
+            );
+
+            // EYES
+            if (index === 0) {
+                ctx.fillStyle = "#ffffff";
+
+                ctx.fillRect(
+                    segment.x * CELL + 8,
+                    segment.y * CELL + 8,
+                    5, 5
+                );
+
+                ctx.fillRect(
+                    segment.x * CELL + 18,
+                    segment.y * CELL + 8,
+                    5, 5
+                );
+            }
+        });
+    });
+}
+
+
+// SCOREBOARD
+
+function updateScoreboard(state) {
+
+    const board = document.getElementById("scoreboard");
+    board.innerHTML = "";
+
+    state.players.forEach(player => {
+
+        const item = document.createElement("div");
+
+        item.className = "score-item";
+
+        if (!player.alive) {
+            item.classList.add("dead");
+        }
+
+        item.style.borderColor = player.color;
+
+        const name = document.createElement("div");
+        name.textContent = player.name;
+
+        const score = document.createElement("small");
+
+        score.textContent = player.alive
+            ? "FOOD: " + player.score
+            : "ELIMINATED";
+
+        item.appendChild(name);
+        item.appendChild(score);
+
+        board.appendChild(item);
+
+    });
+
+}
+
+// GAME STATUS
+
+function updateGameStatus(state) {
+
+    const alive = state.players.filter(p => p.alive).length;
+
+    const status = document.getElementById("gameStatus");
+
+    if (state.gameOver) {
+        status.textContent = "GAME OVER";
+    } else if (isSpectator) {
+        status.textContent = "SPECTATING";
+    } else {
+        status.textContent = alive + " PLAYERS ALIVE";
+    }
+
+}
+
+// MOVEMENT
+
+function sendDirection(direction) {
+
+    if (isSpectator || gameFinished) return;
+
+    socket.emit("changeDirection", direction);
+
+}
+
+// KEYBOARD CONTROLS
+
+document.addEventListener("keydown", event => {
+
+    const keys = {
+        ArrowUp: "up",
+        ArrowDown: "down",
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        w: "up",
+        W: "up",
+        s: "down",
+        S: "down",
+        a: "left",
+        A: "left",
+        d: "right",
+        D: "right"
+    };
+
+    const direction = keys[event.key];
+
+    if (
+        direction &&
+        !document.getElementById("game").classList.contains("hidden")
+    ) {
+
+        event.preventDefault();
+        sendDirection(direction);
+
+    }
+
+});
+
+// COPY ROOM CODE
+
+function copyCode() {
+
+    navigator.clipboard.writeText(currentRoom)
+        .then(() => showMessage("ROOM CODE COPIED!"))
+        .catch(() => showMessage("YOUR ROOM CODE: " + currentRoom));
+
+}
+
+// LEAVE ROOM
+
+function leaveRoom() {
+    location.reload();
+}
+
+socket.on("connect", () => {
+    console.log("Connected to PORPIS ARCADE!");
+});
+
+socket.on("disconnect", () => {
+    showMessage("CONNECTION LOST. RECONNECTING...");
+});
+
+</script>
+
+</body>
+</html>
